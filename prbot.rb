@@ -51,11 +51,11 @@ class PRBot < SlackRubyBot::Bot
 
       messages = prs.map do |pr|
         if pr.assignee
-          "• #{pr.number}: *#{pr.title}* " \
+          "• #{pr.base.repo.name}/#{pr.number}: *#{pr.title}* " \
             "by #{pr.user.login}, assigned to #{pr.assignee.login}: #{pr.html_url}"
 
         else
-          "• #{pr.number}: *#{pr.title}* " \
+          "• #{pr.base.repo.name}/#{pr.number}: *#{pr.title}* " \
             "by #{pr.user.login}: #{pr.html_url}"
         end
       end

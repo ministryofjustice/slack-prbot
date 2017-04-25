@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'github_api'
 require 'slack-ruby-bot'
 
 SlackRubyBot::Client.logger.level = Logger::WARN
@@ -31,7 +32,35 @@ class PRBot < SlackRubyBot::Bot
   end
 
   command 'open' do |client, data, _match|
-    client.say(channel: data.channel, text: 'Command not implemented yet')
+    begin
+      github = Github.new basic_auth: "#{ENV['GH_USER']}:#{ENV['GH_TOKEN']}", auto_pagination: true
+      prs = []
+
+      REPOS.each do |repo|
+        this_repo_prs = github.pull_requests.list 'ministryofjustice', repo
+        prs += this_repo_prs.sort_by(&:number)
+      end
+
+      messages = prs.map do |pr|
+        if pr.assignee
+          "• #{pr.number}: *#{pr.title}* " \
+            "by #{pr.user.login}, assigned to #{pr.assignee.login}: #{pr.html_url}"
+
+        else
+          "• #{pr.number}: *#{pr.title}* " \
+            "by #{pr.user.login}: #{pr.html_url}"
+        end
+      end
+      message = if messages.any?
+                  "The following PRs are open:\n" + messages.join("\n")
+                else
+                  'No pull requests found'
+                end
+      client.say(channel: data.channel, text: message)
+    rescue Github::Error::Unauthorized
+      error = 'Could not authenticate with github.'
+      client.say channel: data.channel, text: error
+    end
   end
 end
 

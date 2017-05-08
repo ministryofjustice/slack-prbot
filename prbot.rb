@@ -32,6 +32,14 @@ class PRBot < SlackRubyBot::Bot
   end
 
   command 'open' do |client, data, _match|
+    ENV_VARS = %w( GH_USER GH_ORG GH_TOKEN ).freeze
+    ENV_VARS.each do |env_var|
+      unless ENV[env_var]
+        client.say channel: data.channel, text: "Please set a value for `#{env_var}`"
+      end
+    end
+    next unless ENV_VARS.all? { |env_var| ENV[env_var] }
+
     begin
       github = Github.new basic_auth: "#{ENV['GH_USER']}:#{ENV['GH_TOKEN']}", auto_pagination: true
       prs = []

@@ -37,7 +37,7 @@ class PRBot < SlackRubyBot::Bot
       prs = []
 
       REPOS.each do |repo|
-        this_repo_prs = github.pull_requests.list 'ministryofjustice', repo
+        this_repo_prs = github.pull_requests.list ENV['GH_ORG'], repo
         prs += this_repo_prs.sort_by(&:number)
       end
 

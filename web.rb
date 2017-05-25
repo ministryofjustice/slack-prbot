@@ -2,6 +2,7 @@ require 'sinatra/base'
 require 'github_api'
 
 class WebListener < Sinatra::Base
+
   REPOS = %w( bootstrap-cfn bootstrap-salt template-deploy ).freeze
   get '/' do
     <<~EOT
@@ -11,9 +12,10 @@ class WebListener < Sinatra::Base
   end
 
   post '/webhook' do
+    content_type 'application/json'
     unless ENV['WEBHOOK_TOKEN']
       status 500
-      body '{ "error": { "code": 401, "message": "Please set WEBHOOK_TOKEN in the environment" } }'
+      body '{ "error": { "code": 500, "message": "Please set WEBHOOK_TOKEN in the environment" } }'
       break
     end
     if params[:token] != ENV['WEBHOOK_TOKEN']

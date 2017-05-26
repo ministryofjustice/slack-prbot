@@ -71,5 +71,3 @@ class PRBot < SlackRubyBot::Bot
     end
   end
 end
-
-PRBot.run

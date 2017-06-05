@@ -2,8 +2,8 @@ require 'sinatra/base'
 require 'github_api'
 
 class WebListener < Sinatra::Base
+  DEFAULT_REPOS = %w( bootstrap-cfn bootstrap-salt template-deploy ).freeze
 
-  REPOS = %w( bootstrap-cfn bootstrap-salt template-deploy ).freeze
   get '/' do
     <<~EOT
       This is the webapp which is used as a Slack webhook to notify channels
@@ -28,9 +28,25 @@ class WebListener < Sinatra::Base
       github = Github.new basic_auth: "#{ENV['GH_USER']}:#{ENV['GH_TOKEN']}", auto_pagination: true
       prs = []
 
-      REPOS.each do |repo|
-        this_repo_prs = github.pull_requests.list ENV['GH_ORG'], repo
-        prs += this_repo_prs.sort_by(&:number)
+      if params[:text] =~ /for team (.*)/
+        all_teams = github.orgs.teams.list org: 'ministryofjustice'
+        team_id = all_teams.select{|t| t.name == $1 }.first.id
+        repos = github.orgs.teams.list_repos team_id
+        repos.each do |repo|
+          this_repo_prs = github.pull_requests.list ENV['GH_ORG'], repo.name
+          prs += this_repo_prs.sort_by(&:number)
+        end
+      elsif params[:text] =~ /in repo (.*)/
+          this_repo_prs = github.pull_requests.list ENV['GH_ORG'], $1
+          prs += this_repo_prs.sort_by(&:number)
+      elsif params[:text] =~ /help/
+        body '{"text": "Say one of the following: pulls, pulls for team &lt;team&gt;, pulls in repo &lt;repo&gt;"}'
+        return
+      else
+        DEFAULT_REPOS.each do |repo|
+          this_repo_prs = github.pull_requests.list ENV['GH_ORG'], repo
+          prs += this_repo_prs.sort_by(&:number)
+        end
       end
 
       messages = prs.map do |pr|

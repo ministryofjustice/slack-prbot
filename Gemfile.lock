@@ -54,6 +54,8 @@ GEM
     rack (2.0.1)
     rack-protection (2.0.0)
       rack
+    sentry-raven (2.5.1)
+      faraday (>= 0.7.6, < 1.0)
     sinatra (2.0.0)
       mustermann (~> 1.0)
       rack (~> 2.0)
@@ -73,8 +75,9 @@ DEPENDENCIES
   celluloid-io
   foreman
   github_api
+  sentry-raven
   sinatra
   web
 
 BUNDLED WITH
-   1.12.5
+   1.15.1

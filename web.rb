@@ -5,6 +5,10 @@ require 'github_api'
 class WebListener < Sinatra::Base
   attr_accessor :github
 
+  # configure do
+  #   set :raise_errors, false
+  # end
+
   DEFAULT_REPOS = %w[bootstrap-cfn bootstrap-salt template-deploy].freeze
 
   def get_team_id(name)

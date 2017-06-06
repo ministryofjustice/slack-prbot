@@ -39,10 +39,10 @@ class WebListener < Sinatra::Base
 
   def format_pr(pr)
     if pr.assignee
-      "• #{pr_title(pr)} by #{pr.user.login}, assigned to #{pr.assignee.login}: #{pr.html_url}"
+      "• <#{pr.html_url}|#{pr_title(pr)}> by #{pr.user.login}, assigned to #{pr.assignee.login}"
 
     else
-      "• #{pr_title(pr)} by #{pr.user.login}: #{pr.html_url}"
+      "• <#{pr.html_url}|#{pr_title(pr)}> by #{pr.user.login}"
     end
   end
 

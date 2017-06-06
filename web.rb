@@ -34,7 +34,7 @@ class WebListener < Sinatra::Base
   end
 
   def pr_title(pr)
-    "#{pr.base.repo.name}/#{pr.number}: #{pr.title}"
+    "#{pr.base.repo.name}/#{pr.number}: *#{pr.title}*"
   end
 
   def format_pr(pr)

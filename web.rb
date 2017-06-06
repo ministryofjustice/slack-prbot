@@ -29,8 +29,8 @@ class WebListener < Sinatra::Base
       'open prs',
       'open prs for team &lt;team&gt;',
       'open prs in repo &lt;repo&gt;'
-    ]
-    body %({"text": "Say one of the following: #{usages.join(',')}"})
+    ].map { |s| "`#{s}`" }
+    body %({"text": "Say one of the following: #{usages.join(', ')}"})
   end
 
   def pr_title(pr)

@@ -82,13 +82,11 @@ class WebListener < Sinatra::Base
   post '/webhook' do
     content_type 'application/json'
     unless ENV['WEBHOOK_TOKEN']
-      status 500
-      body '{ "error": { "code": 500, "message": "Please set WEBHOOK_TOKEN in the environment" } }'
+      body '{"text": "Please set WEBHOOK_TOKEN in the environment"}'
       break
     end
     if params[:token] != ENV['WEBHOOK_TOKEN']
-      status 401
-      body '{ "error": { "code": 401, "message": "Invalid or missing token in request" } }'
+      body '{"text": "Invalid or missing token in request"}'
       break
     end
     begin
@@ -100,12 +98,13 @@ class WebListener < Sinatra::Base
       formatted_prs = prs.map { |pr| format_pr(pr) }
       body compose_response formatted_prs
     rescue Github::Error::Unauthorized
-      status 500
-      body '{ "error": { "code": 500, "message": "Could not authenticate with github." } }'
+      text = 'Could not authenticate with Github. Please check `GH_ORG`, `GH_TOKEN` and `GH_USER`'
+      body %({"text": "#{text}"})
     rescue Github::Error::NotFound
-      status 500
-      message = 'Github did not understand our request. Perhaps GH_ORG is wrong?'
-      body %({ "error": { "code": 500, "message": #{message} } })
+      body %({"text": "Github did not understand our request. Perhaps `GH_ORG` is wrong?"})
+    rescue => e
+      body %({ "text": "Unhandled error: `#{e.message}`})
+      raise e
     end
   end
 end

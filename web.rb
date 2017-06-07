@@ -9,11 +9,13 @@ class WebListener < Sinatra::Base
 
   def get_team_id(name)
     all_teams = @github.orgs.teams.list org: 'ministryofjustice'
-    all_teams.select { |t| t.name == name }.first.id
+    team = all_teams.select { |t| t.name == name }.first
+    team && team.id
   end
 
   def read_team_prs(team)
     team_id = get_team_id team
+    return nil unless team_id
     repos = @github.orgs.teams.list_repos team_id
     repos.map { |repo| read_prs_for_repo repo.name }.flatten
   end
@@ -60,7 +62,7 @@ class WebListener < Sinatra::Base
 
   def read_prs_for_message(text)
     if text =~ /for team (.*)/
-      read_team_prs Regexp.last_match[1]
+      read_team_prs(Regexp.last_match[1]) || body('{"text": "No such team"}')
     elsif text =~ /in repo (.*)/
       read_prs_for_repo Regexp.last_match[1]
     elsif text =~ /help/
@@ -93,7 +95,7 @@ class WebListener < Sinatra::Base
       @github = Github.new basic_auth: "#{ENV['GH_USER']}:#{ENV['GH_TOKEN']}", auto_pagination: true
 
       prs = read_prs_for_message(params[:text])
-      break unless prs
+      break unless prs.class == Array
 
       formatted_prs = prs.map { |pr| format_pr(pr) }
       body compose_response formatted_prs

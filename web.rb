@@ -85,14 +85,12 @@ class WebListener < Sinatra::Base
 
   post '/webhook' do
     content_type 'application/json'
-    unless ENV['WEBHOOK_TOKEN']
-      body '{"text": "Please set WEBHOOK_TOKEN in the environment"}'
+
+    if !ENV['WEBHOOK_TOKEN'] || params[:token] != ENV['WEBHOOK_TOKEN']
+      body '{"text": "Please check the value of `WEBHOOK_TOKEN` in the environment"}'
       break
     end
-    if params[:token] != ENV['WEBHOOK_TOKEN']
-      body '{"text": "Invalid or missing token in request"}'
-      break
-    end
+
     begin
       @github = Github.new basic_auth: "#{ENV['GH_USER']}:#{ENV['GH_TOKEN']}", auto_pagination: true
 
@@ -104,8 +102,6 @@ class WebListener < Sinatra::Base
     rescue Github::Error::Unauthorized
       text = 'Could not authenticate with Github. Please check `GH_ORG`, `GH_TOKEN` and `GH_USER`'
       body %({"text": "#{text}"})
-    rescue Github::Error::NotFound
-      body %({"text": "Github did not understand our request. Perhaps `GH_ORG` is wrong?"})
     rescue => e
       body %({ "text": "Unhandled error: `#{e.message}`})
       raise e

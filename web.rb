@@ -63,9 +63,9 @@ class WebListener < Sinatra::Base
   end
 
   def read_prs_for_message(text)
-    if text =~ /for team (.*)/
+    if text =~ /for team ([^.]+)\.?/
       read_team_prs(Regexp.last_match[1]) || body('{"text": "No such team"}')
-    elsif text =~ /in repo (.*)/
+    elsif text =~ /in repo ([^.]+)\.?/
       read_prs_for_repo Regexp.last_match[1]
     elsif text =~ /help/ || text =~ /open prs /
       usage

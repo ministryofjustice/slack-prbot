@@ -58,6 +58,8 @@ class WebListener < Sinatra::Base
   def read_prs_for_repo(repo)
     this_repo_prs = @github.pull_requests.list ENV['GH_ORG'], repo
     this_repo_prs.sort_by(&:number)
+  rescue Github::Error::NotFound
+    body '{"text": "No such repo"}'
   end
 
   def read_prs_for_message(text)

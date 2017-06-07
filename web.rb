@@ -65,7 +65,7 @@ class WebListener < Sinatra::Base
       read_team_prs(Regexp.last_match[1]) || body('{"text": "No such team"}')
     elsif text =~ /in repo (.*)/
       read_prs_for_repo Regexp.last_match[1]
-    elsif text =~ /help/
+    elsif text =~ /help/ || text =~ /open prs /
       usage
     else
       read_default_repos

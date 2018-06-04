@@ -1,23 +1,86 @@
 require 'sinatra/base'
-require 'github_api'
+require "graphql/client"
+require "graphql/client/http"
 
 # Main bot is in this class
 class WebListener < Sinatra::Base
-  attr_accessor :github
+  HTTP = GraphQL::Client::HTTP.new("https://api.github.com/graphql") do
+    def headers(context)
+      unless token = context[:access_token] || ENV['GH_TOKEN']
+        fail "Missing GitHub access token"
+      end
+
+      {
+        "Authorization" => "Bearer #{ENV['GH_TOKEN']}"
+      }
+    end
+  end
+  Schema = GraphQL::Client.load_schema(HTTP)
+  GithubClient = GraphQL::Client.new(schema: Schema, execute: HTTP)
+
+  RepoPRQuery = GithubClient.parse <<-GRAPHQL
+    query($organization: String!, $repo: String!) {
+      repository(owner: $organization, name: $repo) {
+        name
+        pullRequests(first: 100, states: [OPEN]) {
+          nodes {
+            number
+            url
+            id
+            title
+            author {
+              login
+            }
+          }
+        }
+      }
+    }
+  GRAPHQL
+  TeamPRQuery = GithubClient.parse <<-GRAPHQL
+    query($organization: String!, $team: String!) {
+      organization(login: $organization) {
+        team(slug: $team) {
+          repositories(first: 100) {
+            nodes {
+              name
+              pullRequests(first: 100, states: [OPEN]) {
+                nodes {
+                  number
+                  url
+                  id
+                  title
+                  author {
+                    login
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  GRAPHQL
 
   DEFAULT_REPOS = %w[bootstrap-cfn bootstrap-salt template-deploy].freeze
 
-  def get_team_id(name)
-    all_teams = @github.orgs.teams.list org: 'ministryofjustice'
-    team = all_teams.select { |t| t.name == name }.first
-    team && team.id
-  end
-
   def read_team_prs(team)
-    team_id = get_team_id team
-    return nil unless team_id
-    repos = @github.orgs.teams.list_repos team_id
-    repos.map { |repo| read_prs_for_repo repo.name }.flatten
+    result = GithubClient.query(TeamPRQuery, variables: {
+      organization: "ministryofjustice",
+      team: team
+    })
+    repos = result.data.organization.team.repositories.nodes
+
+    repos.map { |repo|
+      repo.pull_requests.nodes.map { |pr|
+        {
+          repo_name: repo.name,
+          number: pr.number,
+          title: pr.title,
+          url: pr.url,
+          author: pr.author.login
+        }
+      }
+    }.flatten
   end
 
   def read_default_repos
@@ -36,16 +99,11 @@ class WebListener < Sinatra::Base
   end
 
   def pr_title(pr)
-    "#{pr.base.repo.name}/#{pr.number}: *#{pr.title}*"
+    "#{pr[:repo_name]}##{pr[:number]}: *#{pr[:title]}*"
   end
 
   def format_pr(pr)
-    if pr.assignee
-      "• <#{pr.html_url}|#{pr_title(pr)}> by #{pr.user.login}, assigned to #{pr.assignee.login}"
-
-    else
-      "• <#{pr.html_url}|#{pr_title(pr)}> by #{pr.user.login}"
-    end
+    "• <#{pr[:url]}|#{pr_title(pr)}> by #{pr[:author]}"
   end
 
   get '/' do
@@ -56,10 +114,20 @@ class WebListener < Sinatra::Base
   end
 
   def read_prs_for_repo(repo)
-    this_repo_prs = @github.pull_requests.list ENV['GH_ORG'], repo
-    this_repo_prs.sort_by(&:number)
-  rescue Github::Error::NotFound
-    body '{"text": "No such repo"}'
+    result = GithubClient.query(RepoPRQuery, variables: {
+      organization: "ministryofjustice",
+      repo: repo
+    })
+
+    result.data.repository.pull_requests.nodes.map { |pr|
+      {
+        repo_name: repo,
+        number: pr.number,
+        title: pr.title,
+        url: pr.url,
+        author: pr.author.login
+      }
+    }.flatten
   end
 
   def read_prs_for_message(text)
@@ -92,16 +160,11 @@ class WebListener < Sinatra::Base
     end
 
     begin
-      @github = Github.new basic_auth: "#{ENV['GH_USER']}:#{ENV['GH_TOKEN']}", auto_pagination: true
-
       prs = read_prs_for_message(params[:text])
       break unless prs.class == Array
 
       formatted_prs = prs.map { |pr| format_pr(pr) }
       body compose_response formatted_prs
-    rescue Github::Error::Unauthorized
-      text = 'Could not authenticate with Github. Please check `GH_ORG`, `GH_TOKEN` and `GH_USER`'
-      body %({"text": "#{text}"})
     rescue => e
       body %({ "text": "Unhandled error: `#{e.message}`})
       raise e

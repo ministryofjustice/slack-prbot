@@ -1,7 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'celluloid-io'
-gem 'github_api'
+gem 'graphql-client'
 gem 'sinatra'
 gem 'web'
 

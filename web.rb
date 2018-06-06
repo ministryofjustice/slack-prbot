@@ -26,8 +26,8 @@ class WebListener < Sinatra::Base
           nodes {
             number
             url
-            id
             title
+            createdAt
             author {
               login
             }
@@ -47,8 +47,8 @@ class WebListener < Sinatra::Base
                 nodes {
                   number
                   url
-                  id
                   title
+                  createdAt
                   author {
                     login
                   }
@@ -61,11 +61,9 @@ class WebListener < Sinatra::Base
     }
   GRAPHQL
 
-  DEFAULT_REPOS = %w[bootstrap-cfn bootstrap-salt template-deploy].freeze
-
-  def read_team_prs(team)
+  def read_team_prs(organization, team)
     result = GithubClient.query(TeamPRQuery, variables: {
-      organization: "ministryofjustice",
+      organization: organization,
       team: team
     })
     repos = result.data.organization.team.repositories.nodes
@@ -77,21 +75,15 @@ class WebListener < Sinatra::Base
           number: pr.number,
           title: pr.title,
           url: pr.url,
-          author: pr.author.login
+          author: pr.author.login,
+          created_at: Date.parse(pr.created_at)
         }
       }
     }.flatten
   end
 
-  def read_default_repos
-    DEFAULT_REPOS.map do |repo|
-      read_prs_for_repo repo
-    end.flatten
-  end
-
   def usage
     usages = [
-      'open prs',
       'open prs for team &lt;team&gt;',
       'open prs in repo &lt;repo&gt;'
     ].map { |s| "`#{s}`" }
@@ -103,7 +95,8 @@ class WebListener < Sinatra::Base
   end
 
   def format_pr(pr)
-    "• <#{pr[:url]}|#{pr_title(pr)}> by #{pr[:author]}"
+    pr_age = (Date.today - pr[:created_at]).to_i
+    "• <#{pr[:url]}|#{pr_title(pr)}> by #{pr[:author]} (#{pr_age}d old)"
   end
 
   get '/' do
@@ -113,9 +106,9 @@ class WebListener < Sinatra::Base
     EOT
   end
 
-  def read_prs_for_repo(repo)
+  def read_prs_for_repo(organization, repo)
     result = GithubClient.query(RepoPRQuery, variables: {
-      organization: "ministryofjustice",
+      organization: organization,
       repo: repo
     })
 
@@ -130,15 +123,23 @@ class WebListener < Sinatra::Base
     }.flatten
   end
 
-  def read_prs_for_message(text)
+  def read_prs_for_message(organization, text)
     if text =~ /for team ([^.]+)\.?/
-      read_team_prs(Regexp.last_match[1]) || body('{"text": "No such team"}')
+      team = Regexp.last_match[1]
+      begin
+        read_team_prs(organization, team)
+      rescue => e
+        body(%({"text": "Couldn't read PRs for team `#{team}` in `#{organization}` organization"}))
+      end
     elsif text =~ /in repo ([^.]+)\.?/
-      read_prs_for_repo Regexp.last_match[1]
-    elsif text =~ /help/ || text =~ /open prs /
+      repo = Regexp.last_match[1]
+      begin
+        read_prs_for_repo(organization, repo)
+      rescue => e
+        body(%({"text": "Couldn't read PRs for repo `#{repo}` in `#{organization}` organization"}))
+      end
+    elsif
       usage
-    else
-      read_default_repos
     end
   end
 
@@ -158,9 +159,13 @@ class WebListener < Sinatra::Base
       body '{"text": "Please check the value of `WEBHOOK_TOKEN` in the environment"}'
       break
     end
+    if !ENV['GH_ORG']
+      body '{"text": "Please check the value of `GH_ORG` in the environment"}'
+      break
+    end
 
     begin
-      prs = read_prs_for_message(params[:text])
+      prs = read_prs_for_message(ENV['GH_ORG'], params[:text])
       break unless prs.class == Array
 
       formatted_prs = prs.map { |pr| format_pr(pr) }

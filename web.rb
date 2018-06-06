@@ -61,7 +61,6 @@ class WebListener < Sinatra::Base
     }
   GRAPHQL
 
-  DEFAULT_REPOS = %w[bootstrap-cfn bootstrap-salt template-deploy].freeze
 
   def read_team_prs(team)
     result = GithubClient.query(TeamPRQuery, variables: {
@@ -83,15 +82,8 @@ class WebListener < Sinatra::Base
     }.flatten
   end
 
-  def read_default_repos
-    DEFAULT_REPOS.map do |repo|
-      read_prs_for_repo repo
-    end.flatten
-  end
-
   def usage
     usages = [
-      'open prs',
       'open prs for team &lt;team&gt;',
       'open prs in repo &lt;repo&gt;'
     ].map { |s| "`#{s}`" }
@@ -135,10 +127,8 @@ class WebListener < Sinatra::Base
       read_team_prs(Regexp.last_match[1]) || body('{"text": "No such team"}')
     elsif text =~ /in repo ([^.]+)\.?/
       read_prs_for_repo Regexp.last_match[1]
-    elsif text =~ /help/ || text =~ /open prs /
+    elsif
       usage
-    else
-      read_default_repos
     end
   end
 

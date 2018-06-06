@@ -61,10 +61,9 @@ class WebListener < Sinatra::Base
     }
   GRAPHQL
 
-
-  def read_team_prs(team)
+  def read_team_prs(organization, team)
     result = GithubClient.query(TeamPRQuery, variables: {
-      organization: "ministryofjustice",
+      organization: organization,
       team: team
     })
     repos = result.data.organization.team.repositories.nodes
@@ -105,9 +104,9 @@ class WebListener < Sinatra::Base
     EOT
   end
 
-  def read_prs_for_repo(repo)
+  def read_prs_for_repo(organization, repo)
     result = GithubClient.query(RepoPRQuery, variables: {
-      organization: "ministryofjustice",
+      organization: organization,
       repo: repo
     })
 
@@ -122,11 +121,13 @@ class WebListener < Sinatra::Base
     }.flatten
   end
 
-  def read_prs_for_message(text)
+  def read_prs_for_message(organization, text)
     if text =~ /for team ([^.]+)\.?/
-      read_team_prs(Regexp.last_match[1]) || body('{"text": "No such team"}')
+      team = Regexp.last_match[1]
+      read_team_prs(organization, team)
     elsif text =~ /in repo ([^.]+)\.?/
-      read_prs_for_repo Regexp.last_match[1]
+      repo = Regexp.last_match[1]
+      read_prs_for_repo(organization, repo)
     elsif
       usage
     end
@@ -148,9 +149,13 @@ class WebListener < Sinatra::Base
       body '{"text": "Please check the value of `WEBHOOK_TOKEN` in the environment"}'
       break
     end
+    if !ENV['GH_ORG']
+      body '{"text": "Please check the value of `GH_ORG` in the environment"}'
+      break
+    end
 
     begin
-      prs = read_prs_for_message(params[:text])
+      prs = read_prs_for_message(ENV['GH_ORG'], params[:text])
       break unless prs.class == Array
 
       formatted_prs = prs.map { |pr| format_pr(pr) }

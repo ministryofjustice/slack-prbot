@@ -26,8 +26,8 @@ class WebListener < Sinatra::Base
           nodes {
             number
             url
-            id
             title
+            createdAt
             author {
               login
             }
@@ -47,8 +47,8 @@ class WebListener < Sinatra::Base
                 nodes {
                   number
                   url
-                  id
                   title
+                  createdAt
                   author {
                     login
                   }
@@ -75,7 +75,8 @@ class WebListener < Sinatra::Base
           number: pr.number,
           title: pr.title,
           url: pr.url,
-          author: pr.author.login
+          author: pr.author.login,
+          created_at: Date.parse(pr.created_at)
         }
       }
     }.flatten
@@ -94,7 +95,8 @@ class WebListener < Sinatra::Base
   end
 
   def format_pr(pr)
-    "• <#{pr[:url]}|#{pr_title(pr)}> by #{pr[:author]}"
+    pr_age = (Date.today - pr[:created_at]).to_i
+    "• <#{pr[:url]}|#{pr_title(pr)}> by #{pr[:author]} (#{pr_age}d old)"
   end
 
   get '/' do

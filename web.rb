@@ -124,10 +124,18 @@ class WebListener < Sinatra::Base
   def read_prs_for_message(organization, text)
     if text =~ /for team ([^.]+)\.?/
       team = Regexp.last_match[1]
-      read_team_prs(organization, team)
+      begin
+        read_team_prs(organization, team)
+      rescue => e
+        body(%({"text": "Couldn't read PRs for team `#{team}` in `#{organization}` organization"}))
+      end
     elsif text =~ /in repo ([^.]+)\.?/
       repo = Regexp.last_match[1]
-      read_prs_for_repo(organization, repo)
+      begin
+        read_prs_for_repo(organization, repo)
+      rescue => e
+        body(%({"text": "Couldn't read PRs for repo `#{repo}` in `#{organization}` organization"}))
+      end
     elsif
       usage
     end

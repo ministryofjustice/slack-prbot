@@ -3,6 +3,13 @@ VERSION := 1.0
 ORG := ministryofjustice
 TAGGED := $(ORG)/$(IMAGE):$(VERSION)
 
+build: .built-docker-image
+
+clean:
+	docker rmi $(IMAGE) --force
+	docker rmi $(TAGGED) --force
+	rm .built-docker-image
+
 .built-docker-image: Dockerfile Gemfile config.ru web.rb lib/pr.rb $(wildcard lib/pr/*.rb)
 	docker build -t $(IMAGE) .
 	docker tag $(IMAGE) $(TAGGED)

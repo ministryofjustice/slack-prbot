@@ -7,7 +7,7 @@ class PR
         end
 
         {
-          "Authorization" => "Bearer #{ENV['GH_TOKEN']}"
+          "Authorization" => "Bearer #{token}"
         }
       end
     end

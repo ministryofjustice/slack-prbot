@@ -29,6 +29,10 @@ done via the environment.  Needed settings are:
   * `GH_ORG` - which github organisation to poll.
   * `GH_TOKEN` - a token for the above username. Read access to your org repos is needed.
 
+Development
+-----------
+See the makefile for details of how to run the bot code locally, during development.
+
 Usage
 -----
 

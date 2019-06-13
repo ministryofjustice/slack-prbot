@@ -13,7 +13,7 @@ Setup
 
   * Host this app somewhere - heroku is fine.
   * You'll need to add it in slack (you will need suitable permissions for this):
-    * Set up an outgoing webhook 
+    * Set up an outgoing webhook
     * Set the URL
     * Set up some suitable trigger words. `open prs, open pulls, open pull requests` is a sensible default.
     * Set some appropriate channels to listen in, or use `Any`.
@@ -25,10 +25,13 @@ Configuration
 In the spirit of [12 factor](https://12factor.net/config), configuration is
 done via the environment.  Needed settings are:
 
-  * `SLACK_API_TOKEN` - a token for the bot to use to authenticate to the Slack API.
+  * `WEBHOOK_TOKEN` - a token for the bot to use to authenticate to the Slack API.
   * `GH_ORG` - which github organisation to poll.
   * `GH_TOKEN` - a token for the above username. Read access to your org repos is needed.
-  * `GH_USER` - the username with which the bot should authenticate.
+
+Development
+-----------
+See the makefile for details of how to run the bot code locally, during development.
 
 Usage
 -----

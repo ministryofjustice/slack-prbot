@@ -13,7 +13,7 @@ Setup
 
   * Host this app somewhere - heroku is fine.
   * You'll need to add it in slack (you will need suitable permissions for this):
-    * Set up an outgoing webhook 
+    * Set up an outgoing webhook
     * Set the URL
     * Set up some suitable trigger words. `open prs, open pulls, open pull requests` is a sensible default.
     * Set some appropriate channels to listen in, or use `Any`.

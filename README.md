@@ -25,10 +25,9 @@ Configuration
 In the spirit of [12 factor](https://12factor.net/config), configuration is
 done via the environment.  Needed settings are:
 
-  * `SLACK_API_TOKEN` - a token for the bot to use to authenticate to the Slack API.
+  * `WEBHOOK_TOKEN` - a token for the bot to use to authenticate to the Slack API.
   * `GH_ORG` - which github organisation to poll.
   * `GH_TOKEN` - a token for the above username. Read access to your org repos is needed.
-  * `GH_USER` - the username with which the bot should authenticate.
 
 Usage
 -----

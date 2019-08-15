@@ -41,3 +41,20 @@ If you use the automated reminders then this will trigger a message which in tur
   * `open prs` - a default list of repositories
   * `open prs in repo <x>` - queries a specific repository
   * `open prs for team <x>` - queries all repos to which the team has access
+
+Updating gems
+-------------
+
+To update specific gems, you can follow this procedure:
+
+* comment out the `USER appuser` line in the `Dockerfile` (we need access to `/usr/local` to update gems, so do it as root)
+* run `make clean; make build`
+* run `mkdir tmp`
+* run `docker run --rm -it -v $(pwd)/tmp:/tmp cloud-platform-slack-prbot bash`
+* inside the container, run `bundle update graphql-client`
+* inside the container, run `cp Gemfile.lock /tmp`
+* outside the container, run `cp tmp/Gemfile.lock Gemfile.lock`
+* uncomment the `USER appuser` line in the `Dockerfile`
+* bump the version tag in the `makefile`
+* commit the updated `makefile` and `Gemfile.lock`
+* run `make clean; make build; make docker-push`

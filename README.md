@@ -1,6 +1,19 @@
 PR Bot
 ======
 
+DEPRECATION NOTICE
+------------------
+
+Using this slack bot to list your open PRs is not recommended, because in the past it has exhausted the free tier on Heroku, so it sometimes doesn't work.
+
+In the time since this bot was created, [GitHub] have acquired [Pull Panda], which offers a superset of this functionality. Pull panda is free to use, so that is now the recommended approach.
+
+Pull Panda is available via the [GitHub Marketplace].
+
+[GitHub]: https://github.com
+[Pull Panda]: https://pullpanda.com
+[GitHub Marketplace]: https://github.com/marketplace/pull-panda
+
 Introduction
 ------------
 

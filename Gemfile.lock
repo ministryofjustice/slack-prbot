@@ -1,11 +1,12 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    activesupport (5.2.3)
+    activesupport (6.0.0)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 0.7, < 2)
       minitest (~> 5.1)
       tzinfo (~> 1.1)
+      zeitwerk (~> 2.1, >= 2.1.8)
     celluloid (0.17.4)
       celluloid-essentials
       celluloid-extras
@@ -30,13 +31,13 @@ GEM
     concurrent-ruby (1.1.5)
     foreman (0.85.0)
       thor (~> 0.19.1)
-    graphql (1.9.9)
-    graphql-client (0.15.0)
+    graphql (1.9.13)
+    graphql-client (0.16.0)
       activesupport (>= 3.0)
       graphql (~> 1.8)
-    i18n (1.6.0)
+    i18n (1.7.0)
       concurrent-ruby (~> 1.0)
-    minitest (5.11.3)
+    minitest (5.12.2)
     mustermann (1.0.3)
     nio4r (2.3.1)
     rack (2.0.7)
@@ -54,6 +55,7 @@ GEM
     tzinfo (1.2.5)
       thread_safe (~> 0.1)
     web (0.1.0)
+    zeitwerk (2.2.0)
 
 PLATFORMS
   ruby

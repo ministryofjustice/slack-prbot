@@ -29,7 +29,7 @@ GEM
     celluloid-supervision (0.20.6)
       timers (>= 4.1.1)
     concurrent-ruby (1.1.5)
-    foreman (0.86.0)
+    foreman (0.87.0)
     graphql (1.9.13)
     graphql-client (0.16.0)
       activesupport (>= 3.0)

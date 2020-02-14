@@ -1,5 +1,5 @@
 IMAGE := cloud-platform-slack-prbot
-VERSION := 1.1
+VERSION := 1.2
 ORG := ministryofjustice
 TAGGED := $(ORG)/$(IMAGE):$(VERSION)
 
